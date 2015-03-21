@@ -1,20 +1,14 @@
-
+//////////LIB////////////////////LIB//////////
 #include "Servo.h"
 #include "NewPing.h"
+//////////LIB////////////////////LIB//////////
 
+//////////Ultrasonic-Servo////////////////////Ultrasonic-Servo//////////
 #define TRIGGER_PIN  49  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     48  // Arduino pin tied to echo pin on the ultrasonic sensor.
 #define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
-
-float tempC;
-int LM35 = 1; //LM35 pin
-
-int voltPin = 0; //voltometer pin
-float vPow = 4.991;
-float r1 = 100000;
-float r2 = 10000;
 
 int leftscanval, centerscanval, rightscanval, ldiagonalscanval, rdiagonalscanval;
 char choice;
@@ -31,13 +25,32 @@ char turndirection; //Gets 'l', 'r' or 'f' depending on which direction is obsta
 const int turntime = 900; //Time the robot spends turning (miliseconds)
 int thereis;
 Servo head;
+//////////Ultrasonic-Servo////////////////////Ultrasonic-Servo//////////
 
+//////////TEMP////////////////////TEMP//////////
+float tempC;
+int LM35 = 1; //LM35 pin
+//////////TEMP////////////////////TEMP//////////
+
+//////////VOLT////////////////////VOLT//////////
+int voltPin = 0; //voltometer pin
+float vPow = 4.991;
+float r1 = 100000;
+float r2 = 10000;
+//////////VOLT////////////////////VOLT//////////
+
+//////////SPEAKER////////////////////SPEAKER//////////
+int spkpin = 8;
+int pause = 100;
+int note = 440; // music note A4
+//////////SPEAKER////////////////////SPEAKER//////////
 
 void setup(){
 
 	head.attach(7);
 	head.write(80);
 
+  pinMode(spkpin, OUTPUT);
 }
 
 float volt(){

@@ -8,6 +8,14 @@
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
+float tempC;
+int LM35 = 1; //LM35 pin
+
+int voltPin = 0; //voltometer pin
+float vPow = 4.991;
+float r1 = 100000;
+float r2 = 10000;
+
 int leftscanval, centerscanval, rightscanval, ldiagonalscanval, rdiagonalscanval;
 char choice;
 
@@ -30,6 +38,18 @@ void setup(){
 	head.attach(7);
 	head.write(80);
 
+}
+
+float volt(){
+  float v = (analogRead(0) * vPow) / 1024.0;
+  float v2 = v / (r2 / (r1 + r2));
+  return v2;
+}
+
+float temp(){
+  tempC = analogRead(LM35);
+  tempC = (5.0 * tempC * 100.0)/1024.0;
+  return tempC;
 }
 
 void watchsurrounding(){ //Meassures distances to the right, left, front, left diagonal, right diagonal and asign them in cm to the variables rightscanval, 

@@ -1,6 +1,7 @@
 //////////LIB////////////////////LIB//////////
 #include "Servo.h"
 #include "NewPing.h"
+#include <Wire.h>
 //////////LIB////////////////////LIB//////////
 
 //////////Ultrasonic-Servo////////////////////Ultrasonic-Servo//////////
@@ -65,6 +66,40 @@ float temp(){
   return tempC;
 }
 
+//////////I2C////////////////////I2C//////////
+void stopmove(){
+
+  Wire.beginTransmission(2); // transmit to device #2 (wheels)
+  Wire.write("stop");        // sends 4 bytes
+  Wire.endTransmission();    // stop transmitting
+  //change to number/signal for stopmove
+}
+
+void go(){
+
+  Wire.beginTransmission(2); // transmit to device #2 (wheels)
+  Wire.write("go");        // sends 4 bytes
+  Wire.endTransmission();    // stop transmitting
+  //change to number/signal for stopmove
+}
+
+void turnleft(){
+
+  Wire.beginTransmission(2); // transmit to device #2 (wheels)
+  Wire.write("turnleft");        // sends 4 bytes
+  Wire.endTransmission();    // stop transmitting
+  //change to number/signal for stopmove
+}
+
+void turnright(){
+
+  Wire.beginTransmission(2); // transmit to device #2 (wheels)
+  Wire.write("turnright");        // sends 4 bytes
+  Wire.endTransmission();    // stop transmitting
+  //change to number/signal for stopmove
+}
+//////////I2C////////////////////I2C//////////
+
 void watchsurrounding(){ //Meassures distances to the right, left, front, left diagonal, right diagonal and asign them in cm to the variables rightscanval, 
                          //leftscanval, centerscanval, ldiagonalscanval and rdiagonalscanval (there are 5 points for distance testing)
   centerscanval = sonar.ping_cm();
@@ -114,5 +149,38 @@ char decide(){
 
 void loop(){
 
+  go();  // if nothing is wrong go forward using go() function above.
+  ++numcycles;
+  if(numcycles>130){ //Watch if something is around every 130 loops while moving forward 
+    watchsurrounding();
+    if(leftscanval<sidedistancelimit || ldiagonalscanval<distancelimit){
+      turnright();
+    }
+    if(rightscanval<sidedistancelimit || rdiagonalscanval<distancelimit){
+      turnleft();
+    }
+    numcycles=0; //Restart count of cycles
+  }
+  distance = sonar.ping_cm(); // use the watch() function to see if anything is ahead (when the robot is just moving forward and not looking around it will test the distance in front)
+  if (distance<distancelimit){ // The robot will just stop if it is completely sure there's an obstacle ahead (must test 25 times) (needed to ignore ultrasonic sensor's false signals)
+      ++thereis;}
+  if (distance>distancelimit){
+      thereis=0;} //Count is restarted
+  if (thereis > 25){
+    stopmove(); // Since something is ahead, stop moving.
+    turndirection = decide(); //Decide which direction to turn.
+    switch (turndirection){
+      case 'l':
+        turnleft();
+        break;
+      case 'r':
+        turnright();
+        break;
+      case 'f':
+        ; //Do not turn if there was actually nothing ahead
+        break;
+    }
+    thereis=0;
+  }
 	
 }

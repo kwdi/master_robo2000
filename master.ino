@@ -86,7 +86,7 @@ void go(){
 void turnleft(){
 
   Wire.beginTransmission(2); // transmit to device #2 (wheels)
-  Wire.write("turnleft");        // sends 4 bytes
+  Wire.write("turnL");        // sends 4 bytes
   Wire.endTransmission();    // stop transmitting
   //change to number/signal for stopmove
 }
@@ -94,7 +94,7 @@ void turnleft(){
 void turnright(){
 
   Wire.beginTransmission(2); // transmit to device #2 (wheels)
-  Wire.write("turnright");        // sends 4 bytes
+  Wire.write("turnR");        // sends 4 bytes
   Wire.endTransmission();    // stop transmitting
   //change to number/signal for stopmove
 }

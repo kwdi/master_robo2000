@@ -3,7 +3,7 @@
 #include "NewPing.h"
 #include <Wire.h>
 //////////LIB////////////////////LIB//////////
-
+int pos = 0;
 //////////Ultrasonic-Servo////////////////////Ultrasonic-Servo//////////
 #define TRIGGER_PIN  49  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     48  // Arduino pin tied to echo pin on the ultrasonic sensor.
@@ -28,6 +28,20 @@ int thereis;
 Servo head;
 //////////Ultrasonic-Servo////////////////////Ultrasonic-Servo//////////
 
+//////////CO////////////////////CO//////////
+/*#define VOLTAGE_REGULATOR_DIGITAL_OUT_PIN 8
+#define MQ9_ANALOG_IN_PIN 2
+
+#define MQ9_HEATER_5_V_TIME_MILLIS 60000
+#define MQ9_HEATER_1_5_V_TIME_MILLIS 90000
+
+#define GAS_LEVEL_READING_PERIOD_MILLIS 1000
+
+unsigned long startMillis;
+unsigned long switchTimeMillis;
+boolean heaterInHighPhase; */
+//////////CO////////////////////CO//////////
+
 //////////TEMP////////////////////TEMP//////////
 float tempC;
 int LM35 = 1; //LM35 pin
@@ -47,12 +61,48 @@ int note = 440; // music note A4
 //////////SPEAKER////////////////////SPEAKER//////////
 
 void setup(){
-
+  Serial.begin(9600);
 	head.attach(7);
 	head.write(80);
-
+  Wire.begin(); // join i2c bus (address optional for master)
   pinMode(spkpin, OUTPUT);
+///////CO
+/*
+  pinMode(VOLTAGE_REGULATOR_DIGITAL_OUT_PIN, OUTPUT);
+  startMillis = millis();
+  turnHeaterHigh();
+  
+  Serial.println("Elapsed Time (s), Gas Level");
+*/
+///////CO
 }
+
+//////////CO////////////////////CO//////////
+/*
+void turnHeaterHigh(){
+  // 5v phase
+  digitalWrite(VOLTAGE_REGULATOR_DIGITAL_OUT_PIN, LOW);
+  heaterInHighPhase = true;
+  switchTimeMillis = millis() + MQ9_HEATER_5_V_TIME_MILLIS;
+}
+
+void turnHeaterLow(){
+  // 1.5v phase
+  digitalWrite(VOLTAGE_REGULATOR_DIGITAL_OUT_PIN, HIGH);
+  heaterInHighPhase = false;
+  switchTimeMillis = millis() + MQ9_HEATER_1_5_V_TIME_MILLIS;
+}
+
+void readGasLevel(){
+  unsigned int gasLevel = analogRead(MQ9_ANALOG_IN_PIN);
+  unsigned int time = (millis() - startMillis) / 1000;
+  
+  Serial.print(time);
+  Serial.print(",");
+  Serial.println(gasLevel);
+}
+*/
+//////////CO////////////////////CO//////////
 
 float volt(){
   float v = (analogRead(0) * vPow) / 1024.0;
@@ -69,32 +119,40 @@ float temp(){
 //////////I2C////////////////////I2C//////////
 void stopmove(){
 
-  Wire.beginTransmission(2); // transmit to device #2 (wheels)
-  Wire.write("stop");        // sends 4 bytes
+  Wire.beginTransmission(5); // transmit to device #2 (wheels)
+  Wire.write(5);        // sends 4 bytes
   Wire.endTransmission();    // stop transmitting
   //change to number/signal for stopmove
 }
 
 void go(){
 
-  Wire.beginTransmission(2); // transmit to device #2 (wheels)
-  Wire.write("go");        // sends 4 bytes
+  Wire.beginTransmission(5); // transmit to device #2 (wheels)
+  Wire.write(1);        // sends 4 bytes
+  Wire.endTransmission();    // stop transmitting
+  //change to number/signal for stopmove
+}
+
+void backwards(){
+
+  Wire.beginTransmission(5); // transmit to device #2 (wheels)
+  Wire.write(2);        // sends 4 bytes
   Wire.endTransmission();    // stop transmitting
   //change to number/signal for stopmove
 }
 
 void turnleft(){
 
-  Wire.beginTransmission(2); // transmit to device #2 (wheels)
-  Wire.write("turnL");        // sends 4 bytes
+  Wire.beginTransmission(5); // transmit to device #2 (wheels)
+  Wire.write(3);        // sends 4 bytes
   Wire.endTransmission();    // stop transmitting
   //change to number/signal for stopmove
 }
 
 void turnright(){
 
-  Wire.beginTransmission(2); // transmit to device #2 (wheels)
-  Wire.write("turnR");        // sends 4 bytes
+  Wire.beginTransmission(5); // transmit to device #2 (wheels)
+  Wire.write(4);        // sends 4 bytes
   Wire.endTransmission();    // stop transmitting
   //change to number/signal for stopmove
 }
@@ -105,27 +163,33 @@ void watchsurrounding(){ //Meassures distances to the right, left, front, left d
   centerscanval = sonar.ping_cm();
   if(centerscanval<distancelimit){stopmove();}
   head.write(120);
-  delay(100);
+  Serial.println("120");
+  delay(300);
   ldiagonalscanval = sonar.ping_cm();
   if(ldiagonalscanval<distancelimit){stopmove();}
   head.write(160); //Didn't use 180 degrees because my servo is not able to take this angle
+  Serial.println("160");
   delay(300);
   leftscanval = sonar.ping_cm();
   if(leftscanval<sidedistancelimit){stopmove();}
   head.write(120);
-  delay(100);
+  Serial.println("120");
+  delay(300);
   ldiagonalscanval = sonar.ping_cm();
   if(ldiagonalscanval<distancelimit){stopmove();}
   head.write(80); //I used 80 degrees because its the central angle of my 160 degrees span (use 90 degrees if you are moving your servo through the whole 180 degrees)
-  delay(100);
+  Serial.println("80");
+  delay(300);
   centerscanval = sonar.ping_cm();
   if(centerscanval<distancelimit){stopmove();}
   head.write(40);
-  delay(100);
+  Serial.println("40");
+  delay(300);
   rdiagonalscanval = sonar.ping_cm();
   if(rdiagonalscanval<distancelimit){stopmove();}
   head.write(0);
-  delay(100);
+  Serial.println("0");
+  delay(300);
   rightscanval = sonar.ping_cm();
   if(rightscanval<sidedistancelimit){stopmove();}
 
@@ -134,6 +198,7 @@ void watchsurrounding(){ //Meassures distances to the right, left, front, left d
 }
 
 char decide(){
+
   watchsurrounding();
   if (leftscanval>rightscanval && leftscanval>centerscanval){
     choice = 'l';
@@ -148,11 +213,16 @@ char decide(){
 }
 
 void loop(){
-
+    
+  Serial.println("startingloop");
   go();  // if nothing is wrong go forward using go() function above.
+  Serial.println("go");
+
   ++numcycles;
   if(numcycles>130){ //Watch if something is around every 130 loops while moving forward 
     watchsurrounding();
+    Serial.println("watch");
+
     if(leftscanval<sidedistancelimit || ldiagonalscanval<distancelimit){
       turnright();
     }
@@ -171,9 +241,11 @@ void loop(){
     turndirection = decide(); //Decide which direction to turn.
     switch (turndirection){
       case 'l':
+      Serial.println("LLLLLL");
         turnleft();
         break;
       case 'r':
+      Serial.println("RRRRR");
         turnright();
         break;
       case 'f':
@@ -181,6 +253,9 @@ void loop(){
         break;
     }
     thereis=0;
-  }
-	
+  } 
+
+
+  
+
 }
